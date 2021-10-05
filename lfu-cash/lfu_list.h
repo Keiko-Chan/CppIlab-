@@ -3,7 +3,6 @@
 #include <list>    
 #include <iterator> 
 
-using namespace std;
 //---------------------------------------------------------------------
 template <typename T>	
 struct list_node;
@@ -12,7 +11,7 @@ template <typename T>
 struct lfu_node;
 //---------------------------------------------------------------------
 template <typename T>	
-using list_it = typename list <struct lfu_node<T>> :: iterator;
+using list_it = typename std::list <struct lfu_node<T>> :: iterator;
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 template <typename T>	
@@ -26,7 +25,7 @@ struct lfu_node
 template <typename T>	
 struct list_node							
 {
-	list<struct lfu_node<T>> List;
+	std::list<struct lfu_node<T>> List;
 	int frequency;
 	list_node* next;
 	list_node* prev;		
@@ -69,14 +68,13 @@ class MyList
 			del->prev->next = del->next;
 		if(del->next != NULL)
 			del->next->prev = del->prev;
-		delete del;													//надеюсь лист удалится вместе со всей структурой в которой он содержится
+		delete del;											
 	}
 //---------------------------------------------------------------------	
 public:
 //---------------------------------------------------------------------
 	MyList()
 	{
-		//head = (struct list_node<T>*)calloc (1, sizeof(struct list_node<T>));
 		head = new struct list_node<T>;
 		head->next = NULL;
 		head->prev = NULL;		
@@ -165,7 +163,7 @@ public:
 			cur_l = cur_l->next;
 			
 			 for (pos = (cur_l->List).begin(); pos != (cur_l->List).end(); ++pos)
-    				cout << pos->DATA << " ";
+    				std::cout << pos->DATA << " ";
     				
     			printf("\n");
 		}

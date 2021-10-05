@@ -2,24 +2,23 @@
 #include <unordered_map>
 #include <functional>
 
-using namespace std;
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 template <typename T>	
-using unmap_it = typename unordered_map<int, list_it<T>> :: iterator;
+using unmap_it = typename std::unordered_map<int, list_it<T>> :: iterator;
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 template <typename T>
 class LFU
 {
 	long int cash_size;									//размер кэша
-	hash<T> T_hash;									//это вроде для того чтобы получать хэш
+	std::hash<T> T_hash;									//это вроде для того чтобы получать хэш
 	list_it<T> l_it;									//это тип для итератора листа
 	unmap_it<T> m_it;									//это тип для итератора таблицы
 	T delet_dat;										//это дата которую буду удалять из таблицы
 	long int hit;
 //---------------------------------------------------------------------	
-	unordered_map<int, list_it<T>> table;							//это хэш таблица
+	std::unordered_map<int, list_it<T>> table;							//это хэш таблица
 	MyList <T> LIST;									//надо чтобы лист был
 //---------------------------------------------------------------------
 public:
