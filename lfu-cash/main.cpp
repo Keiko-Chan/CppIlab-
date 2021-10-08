@@ -1,24 +1,23 @@
 #include "lfu_cash.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 int main()
 {
 	long int size, i = 0, num;
 	int x;
 
-	cin >> size >> num;
+	std::cin >> size >> num;					//cash size//quantity of number you enter
 	
 	LFU<int> cash(size);
 	
 	while(i < num)
 	{
-		cin >> x;
+		std::cin >> x;
 		cash.PUSH(x);
 		i++;
 	}	
 	
-	cout << "hits:" << cash.HITS() << endl;
+	std::cout << "hits:" << cash.HITS() << std::endl;
+	
+	//cash.PRINT();						//if you need to print it
 }
 
