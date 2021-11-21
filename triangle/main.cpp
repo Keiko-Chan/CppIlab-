@@ -7,7 +7,7 @@ struct tree_node
 	double My, my;
 	double Mz, mz;
 	
-	std::vector<Triangle<double>> trv;
+	std::vector<Triangle> trv;
 	
 	struct tree_node *v1 = nullptr;
 	struct tree_node *v2 = nullptr;
@@ -19,7 +19,7 @@ struct tree_node
 	struct tree_node *v8 = nullptr;
 	struct tree_node *rel = nullptr;
 	
-	bool in_cube(Triangle<double> tr)
+	bool in_cube(Triangle tr)
 	{
 		if(tr.pt1.x <= Mx && tr.pt1.x >= mx && tr.pt1.z <= Mz && tr.pt1.z >= mz && tr.pt1.y <= My && tr.pt1.y >= my) 
 			if(tr.pt2.x <= Mx && tr.pt2.x >= mx && tr.pt2.z <= Mz && tr.pt2.z >= mz && tr.pt2.y <= My && tr.pt2.y >= my) 
@@ -31,60 +31,51 @@ struct tree_node
 	
 	void create_level()
 	{
-		struct tree_node vec1;
-		struct tree_node vec2;
-		struct tree_node vec3;
-		struct tree_node vec4;
-		struct tree_node vec5;
-		struct tree_node vec6;
-		struct tree_node vec7;
-		struct tree_node vec8;
+		v1 = new struct tree_node;
+		v2 = new struct tree_node;
+		v3 = new struct tree_node;
+		v4 = new struct tree_node;
+		v5 = new struct tree_node;
+		v6 = new struct tree_node;
+		v7 = new struct tree_node;
+		v8 = new struct tree_node;
 		
 		double nx = (Mx + mx)/2;
 		double ny = (My + my)/2;
 		double nz = (Mz + mz)/2;
 		
-		vec1.Mx = Mx; vec1.My = My; vec1.Mz = Mz;
-		vec1.mx = nx; vec1.my = ny; vec1.mz = nz;
+		v1->Mx = Mx; v1->My = My; v1->Mz = Mz;
+		v1->mx = nx; v1->my = ny; v1->mz = nz;
 		
-		vec2.Mx = Mx; vec2.My = ny; vec2.Mz = nz;
-		vec2.mx = nx; vec2.my = my; vec2.mz = mz;
+		v2->Mx = Mx; v2->My = ny; v2->Mz = nz;
+		v2->mx = nx; v2->my = my; v2->mz = mz;
 		
-		vec3.Mx = nx; vec3.My = My; vec3.Mz = Mz;
-		vec3.mx = mx; vec3.my = ny; vec3.mz = nz;
+		v3->Mx = nx; v3->My = My; v3->Mz = Mz;
+		v3->mx = mx; v3->my = ny; v3->mz = nz;
 		
-		vec4.Mx = nx; vec4.My = ny; vec4.Mz = nz;
-		vec4.mx = mx; vec4.my = my; vec4.mz = mz;
+		v4->Mx = nx; v4->My = ny; v4->Mz = nz;
+		v4->mx = mx; v4->my = my; v4->mz = mz;
 		
-		vec5.Mx = Mx; vec5.My = My; vec5.Mz = nz;
-		vec5.mx = nx; vec5.my = ny; vec5.mz = mz;
+		v5->Mx = Mx; v5->My = My; v5->Mz = nz;
+		v5->mx = nx; v5->my = ny; v5->mz = mz;
 		
-		vec6.Mx = Mx; vec6.My = ny; vec6.Mz = Mz;
-		vec6.mx = nx; vec6.my = my; vec6.mz = nz;
+		v6->Mx = Mx; v6->My = ny; v6->Mz = Mz;
+		v6->mx = nx; v6->my = my; v6->mz = nz;
 		
-		vec7.Mx = nx; vec7.My = My; vec7.Mz = nz;
-		vec7.mx = mx; vec7.my = ny; vec7.mz = mz;
+		v7->Mx = nx; v7->My = My; v7->Mz = nz;
+		v7->mx = mx; v7->my = ny; v7->mz = mz;
 		
-		vec8.Mx = nx; vec8.My = ny; vec8.Mz = Mz;
-		vec8.mx = mx; vec8.my = my; vec8.mz = nz;
+		v8->Mx = nx; v8->My = ny; v8->Mz = Mz;
+		v8->mx = mx; v8->my = my; v8->mz = nz;
 		
-		vec1.rel = this;
-		vec2.rel = this;
-		vec3.rel = this;
-		vec4.rel = this;
-		vec5.rel = this;
-		vec6.rel = this;
-		vec7.rel = this;
-		vec8.rel = this;
-		
-		v1 = &vec1;
-		v2 = &vec2;
-		v3 = &vec3;
-		v4 = &vec4;
-		v5 = &vec5;
-		v6 = &vec6;
-		v7 = &vec7;
-		v8 = &vec8;
+		v1->rel = this;
+		v2->rel = this;
+		v3->rel = this;
+		v4->rel = this;
+		v5->rel = this;
+		v6->rel = this;
+		v7->rel = this;
+		v8->rel = this;		
 	}
 };
 
@@ -97,7 +88,7 @@ void make_tree(struct tree_node *head)
 	while(i < leng)
 	{
 		i++;
-		Triangle<double> tr = head->trv.back();
+		Triangle tr = head->trv.back();
 		
 		if(head->v1->in_cube(tr))
 		{
@@ -162,34 +153,34 @@ void make_tree(struct tree_node *head)
 	if(leng == head->trv.size())
 		return;
 		
-	if(!head->v1->trv.empty());
+	if(!(head->v1->trv.empty() || head->v1->trv.size() < 3))
 		make_tree(head->v1);
-	if(!head->v2->trv.empty());
+	if(!(head->v2->trv.empty() || head->v2->trv.size() < 3))
 		make_tree(head->v2);
-	if(!head->v3->trv.empty());
+	if(!(head->v3->trv.empty() || head->v3->trv.size() < 3))
 		make_tree(head->v3);	
-	if(!head->v4->trv.empty());
+	if(!(head->v4->trv.empty() || head->v4->trv.size() < 3))
 		make_tree(head->v4);
-	if(!head->v5->trv.empty());
+	if(!(head->v5->trv.empty() || head->v5->trv.size() < 3))
 		make_tree(head->v5);
-	if(!head->v6->trv.empty());
+	if(!(head->v6->trv.empty() || head->v6->trv.size() < 3))
 		make_tree(head->v6);		
-	if(!head->v7->trv.empty());
+	if(!(head->v7->trv.empty() || head->v7->trv.size() < 3))
 		make_tree(head->v7);
-	if(!head->v8->trv.empty());
+	if(!(head->v8->trv.empty() || head->v8->trv.size() < 3))
 		make_tree(head->v8);
 	return;	
 }
 
-void cross_tr(struct tree_node *head, std::vector<Triangle<double>> tr_cr, char* point)
+void cross_tr(struct tree_node *head, std::vector<Triangle> tr_cr, char* point)
 {	
 	if(!head->trv.empty())
 	{
-		for (auto it = head->trv.begin(); it++ != head->trv.end(); ) 
+		for (auto it = head->trv.begin(); (it + 1) != head->trv.end(); ) 
 		{
-   		     	for (auto jt = it++; jt != head->trv.end(); ) 
+   		     	for (auto jt = (it + 1); jt != head->trv.end(); ) 
 			{
-				if((*it).crossTriangle(*jt))
+				if((*it).crossTriangle(*jt) && !(point[it->number] && point[jt->number]))
 				{
 					point[it->number] = 1;
 					point[jt->number] = 1;
@@ -229,21 +220,21 @@ void cross_tr(struct tree_node *head, std::vector<Triangle<double>> tr_cr, char*
     		}
     	}
     	
-    	if(head->v1 != nullptr)
+    	if(head->v1 != nullptr && (head->v1->v1 != nullptr || !head->v1->trv.empty()))
 		cross_tr(head->v1, tr_cr, point);
-	if(head->v2 != nullptr)
+	if(head->v2 != nullptr && (head->v2->v1 != nullptr || !head->v2->trv.empty()))
 		cross_tr(head->v2, tr_cr, point);
-	if(head->v3 != nullptr)
+	if(head->v1 != nullptr && (head->v3->v1 != nullptr || !head->v3->trv.empty()))
 		cross_tr(head->v3, tr_cr, point);
-	if(head->v4 != nullptr)
+	if(head->v1 != nullptr && (head->v4->v1 != nullptr || !head->v4->trv.empty()))
 		cross_tr(head->v4, tr_cr, point);
-	if(head->v5 != nullptr)
+	if(head->v1 != nullptr && (head->v5->v1 != nullptr || !head->v5->trv.empty()))
 		cross_tr(head->v5, tr_cr, point);
-	if(head->v6 != nullptr)
+	if(head->v1 != nullptr && (head->v6->v1 != nullptr || !head->v6->trv.empty()))
 		cross_tr(head->v6, tr_cr, point);
-	if(head->v7 != nullptr)
+	if(head->v1 != nullptr && (head->v7->v1 != nullptr || !head->v7->trv.empty()))
 		cross_tr(head->v7, tr_cr, point);
-	if(head->v8 != nullptr)
+	if(head->v1 != nullptr && (head->v8->v1 != nullptr || !head->v8->trv.empty()))
 		cross_tr(head->v8, tr_cr, point);
 	
 	return; 
@@ -269,7 +260,7 @@ int main(void)
 	while(i < num)
 	{
 				
-		Point<double> p1{x, y, x};
+		Point p1{x, y, z};
 		
 		if(x < m)
 			m = x;
@@ -287,7 +278,7 @@ int main(void)
 			M = z;		
 		
 		std::cin >> x >> y >> z;
-		Point<double> p2{x, y, z};
+		Point p2{x, y, z};
 		
 		if(x < m)
 			m = x;
@@ -305,7 +296,7 @@ int main(void)
 			M = z;	
 			
 		std::cin >> x >> y >> z;
-		Point<double> p3{x, y, z};
+		Point p3{x, y, z};
 		
 		if(x < m)
 			m = x;
@@ -322,7 +313,7 @@ int main(void)
 		if(z > M)
 			M = z;	
 		
-		Triangle<double> tr{p1, p2, p3, i};
+		Triangle tr{p1, p2, p3, i};
 			
 		head.trv.push_back(tr);	
 		
@@ -337,10 +328,16 @@ int main(void)
 	head.Mz = M;
 	head.mz = m;
 	
-	std::vector<Triangle<double>> tr_cr;
+	std::vector<Triangle> tr_cr{};
 	
 	make_tree(&head);
 	cross_tr(&head, tr_cr, point);
+	
+	for(i = 0; i <= num; i++)
+	{
+		if(point[i] == 1)
+		std::cout << i + 1 << std::endl;
+	}
 	
 	free(point);		
 
