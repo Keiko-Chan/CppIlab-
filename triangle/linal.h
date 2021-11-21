@@ -3,15 +3,17 @@
 #include <assert.h>
 //-------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------
-template <typename T>	
+double e = 0.00001; //accuracy
+//-------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------
 struct Point
 {
-	T x = 0;
-	T y = 0;
-	T z = 0;
+	double x = 0;
+	double y = 0;
+	double z = 0;
 	int invalid = 0;
 	
-	Point(T x1, T y1, T z1) : x(x1), y(y1), z(z1) {}
+	Point(double x1, double y1, double z1) : x(x1), y(y1), z(z1) {}
 	Point() : invalid(0){} 
 	Point(int a) : invalid(a){} 
 	
@@ -25,9 +27,9 @@ struct Point
 			std::cout<<x<<' '<<y<<' '<<z<<'\n';
 	}
 	
-	bool same(const struct Point<T> point) const
+	bool same(const struct Point point) const
 	{
-		if(x == point.x && y == point.y && z == point.z && invalid == point.invalid)
+		if(fabs(x - point.x) < e && fabs(y - point.y) < e && fabs(z - point.z) < e && invalid == point.invalid)
 			return true;
 		else
 			return false;
@@ -36,25 +38,23 @@ struct Point
 };
 //-------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------
-template <typename T>
-static struct Point<T> invalid_point{1};
+static struct Point invalid_point{1};
 //-------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------
-template <typename T>
 struct Vector
 {
-	T ax = 0;
-	T ay = 0;
-	T az = 0;
+	double ax = 0;
+	double ay = 0;
+	double az = 0;
 	
-	Vector(T x1, T y1, T z1)
+	Vector(double x1, double y1, double z1)
 	{
 		ax = x1;
 		ay = y1;
 		az = z1;
 	}
 	
-	Vector(struct Point<T> p1, struct Point<T> p2)
+	Vector(struct Point p1, struct Point p2)
 	{
 		ax = p2.x - p1.x;
 		ay = p2.y - p1.y;
@@ -63,19 +63,19 @@ struct Vector
 	
 	Vector(){}
 	
-	T leng()
+	double leng()
 	{
 		return sqrt(ay*ay + ax*ax + az*az);
 	}
 	
-	struct Vector<T> norvec() const
+	struct Vector norvec() const
 	{
-		struct Vector<T> v{ax, ay, az};
+		struct Vector v{ax, ay, az};
 		
 		if(ax == 0 && ay == 0 && az == 0)
 			std::cout<<"Error invalid vector"<<'\n';
 		
-		T lenge = v.leng();
+		double lenge = v.leng();
 		
 		v.ax = v.ax / lenge;
 		v.ay = v.ay / lenge;
@@ -84,22 +84,20 @@ struct Vector
 		return v;
 	}
 	
-	bool same(const struct Vector<T> vect) const	
+	bool same(const struct Vector vect) const	
 	{
-		assert(!vect.invalid() && "invalid vector in samevect(i)");
-		assert(!this->invalid() && "invalid vector in i.samevect");
+		if(vect.invalid() && this->invalid())
+			return true;
 	
-		struct Vector<T> v1;		
+		struct Vector v2;
+		struct Vector v1;		
 		v1 = vect.norvec();
-		
-		struct Vector<T> v2;		
 		v2 = this->norvec();
 		
-		if((v2.ax == v1.ax || v2.ax == -v1.ax) && (v2.ay == v1.ay || v2.ay == -v1.ay) && (v2.az == v1.az || v2.az == -v1.az ))
+		if(((fabs(v2.ax - v1.ax) < e) && (fabs(v2.ay - v1.ay) < e) && (fabs(v2.az - v1.az) < e)) || ((fabs(v2.ax + v1.ax) < e) && (fabs(v2.ay + v1.ay) < e) && (fabs(v2.az + v1.az) < e)))
 			return true;
 			
-		return false;
-		
+		return false;		
 	}
 	
 	void print() const
@@ -108,12 +106,9 @@ struct Vector
 		std::cout<<ax<<' '<<ay<<' '<<az<<'\n';
 	}	
 	
-	struct Vector<T> vectmul(const struct Vector<T> v)
+	struct Vector vectmul(const struct Vector v)
 	{
-		struct Vector<T> res{};
-		
-		//v.print();
-		//this->print();
+		struct Vector res{};
 		
 		res.ax = ay * v.az - az * v.ay;
 		res.ay = v.ax * az - ax * v.az;
@@ -131,47 +126,41 @@ struct Vector
 };
 //-------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------
-template <typename T>
 struct Line
 {
-	struct Point<T> lp;
-	struct Vector<T> v;
+	struct Point lp;
+	struct Vector v;
 	int invalid = 0;
 //-------------------------------------------------------------------------------------------	
-	Line(struct Point<T> p1, struct Vector<T> v1)
+	Line(struct Point p1, struct Vector v1)
 	{
-		if(!(v1.invalid())) invalid = 1;
+		if((v1.invalid())) invalid = 1;
 		lp = p1;
 		v = v1;
 	}
 	
-	Line(struct Point<T> p1, struct Point<T> p2) : lp(p1), v{p1, p2} {if(!(p1.same(p2))) invalid = 1;}
+	Line(struct Point p1, struct Point p2) : lp(p1), v{p1, p2} {if((p1.same(p2))) invalid = 1;}
 //-------------------------------------------------------------------------------------------	
-	bool onLine(const struct Point<T> p1) const
+	bool onLine(const struct Point p1) const
 	{
 		if(p1.same(lp))
 			return true;
 	
-		struct Vector<T> v1(p1, lp);		
-		v1 = v1.norvec();
+		struct Vector v1(p1, lp);		
 		
-		struct Vector<T> v2;
-		
-		v2 = v.norvec();
-		
-		if((v2.ax == v1.ax && v2.ay == v1.ay && v2.az == v1.az) || (v2.ax == -v1.ax && v2.ay == -v1.ay && v2.az == -v1.az))
+		if(v1.same(v))
 			return true;			
 			
 		else 
 			return false;
 	} 
 //-------------------------------------------------------------------------------------------	
-	bool same(const struct Line<T> line) const
+	bool same(const struct Line line) const
 	{
 		if(!(line.v).same(v))
 			return false;
 		
-		struct Line<T> newline{line.lp, lp};
+		struct Line newline{line.lp, lp};
 		
 		if(!newline.v.same(v))
 			return false;
@@ -179,81 +168,75 @@ struct Line
 		return true;
 	}
 //-------------------------------------------------------------------------------------------	
-	struct Point<T> cross(const struct Line<T> line) const
+	struct Point cross(const struct Line line) const
 	{
 		if(this->same(line))
-			return invalid_point<T>;
+			return invalid_point;
 			
 		if(v.same(line.v))
-			return invalid_point<T>;
+			return invalid_point;
 			
-		T k;
-		T m;
+		double k;
+		double m;
 		
-		if((v.ay * line.v.ax - v.ax * line.v.ay) != 0)
+		if(fabs(v.ay * line.v.ax - v.ax * line.v.ay) > e)
 		{
 		
-			m = (v.ax * (line.lp.y - lp.y) + v.ay * (lp.x - line.lp.x)) / (v.ay * line.v.ax - line.v.ay * v.ax);
-			
-			if(v.ax != 0)
-				k = (line.lp.x + m * line.v.ax - lp.x) / v.ax;
+			m = (v.ax * (line.lp.y - lp.y) + v.ay * (lp.x - line.lp.x)) / (v.ay * line.v.ax - line.v.ay * v.ax);		
 		
-			if(v.az != 0)
+			if(fabs(v.az) > e)
 				k = (line.lp.z + m * line.v.az - lp.z) / v.az;
 				
-			if(v.ax != 0)
+			if(fabs(v.ax) > e)
 				k = (line.lp.x + m * line.v.ax - lp.x) / v.ax;
 				
-			if(v.ay != 0)
+			if(fabs(v.ay) > e)
 				k = (line.lp.y + m * line.v.ay - lp.y) / v.ay;
 		
-			struct Point<T> res(lp.x + k * v.ax, lp.y + k * v.ay, lp.z + k * v.az);
+			struct Point res(lp.x + k * v.ax, lp.y + k * v.ay, lp.z + k * v.az);
 			return res;
 		}
 		
-		if((v.az * line.v.ax - v.ax * line.v.az) != 0)
+		if(fabs(v.az * line.v.ax - v.ax * line.v.az) > e)
 		{
 		
 			m = (v.ax * (line.lp.z - lp.z) + v.az * (lp.x - line.lp.x)) / (v.az * line.v.ax - line.v.az * v.ax);
-			
-			if(v.ax != 0)
-				k = (line.lp.x + m * line.v.ax - lp.x) / v.ax;
 		
-			if(v.az != 0)
+			if(fabs(v.az) > e)
 				k = (line.lp.z + m * line.v.az - lp.z) / v.az;
 				
-			if(v.ax != 0)
+			if(fabs(v.ax) > e)
 				k = (line.lp.x + m * line.v.ax - lp.x) / v.ax;
 				
-			if(v.ay != 0)
+			if(fabs(v.ay) > e)
 				k = (line.lp.y + m * line.v.ay - lp.y) / v.ay;
 		
-			struct Point<T> res(lp.x + k * v.ax, lp.y + k * v.ay, lp.z + k * v.az);
+			struct Point res(lp.x + k * v.ax, lp.y + k * v.ay, lp.z + k * v.az);
 			return res;
 		}
 		
-		if((v.ay * line.v.az - v.az * line.v.ay) != 0)
+		if(fabs(v.ay * line.v.az - v.az * line.v.ay) > e)
 		{
 		
 			m = (v.az * (line.lp.y - lp.y) + v.ay * (lp.z - line.lp.z)) / (v.ay * line.v.az - line.v.ay * v.az);
 			
-			if(v.az != 0)
+			if(fabs(v.az) > e)
 				k = (line.lp.z + m * line.v.az - lp.z) / v.az;
 				
-			if(v.ax != 0)
+			if(fabs(v.ax) > e)
 				k = (line.lp.x + m * line.v.ax - lp.x) / v.ax;
 				
-			if(v.ay != 0)
+			if(fabs(v.ay) > e)
 				k = (line.lp.y + m * line.v.ay - lp.y) / v.ay;
 			
 			if(lp.x + k * v.ax != line.lp.x + m * line.v.ax)
-				return invalid_point<T>;
+				return invalid_point;
 		
-			struct Point<T> res(lp.x + k * v.ax, lp.y + k * v.ay, lp.z + k * v.az);
+			struct Point res(lp.x + k * v.ax, lp.y + k * v.ay, lp.z + k * v.az);
 			return res;
 		}
 		
-		return invalid_point<T>;
+		return invalid_point;
 		
 	}
 //-------------------------------------------------------------------------------------------	
@@ -266,55 +249,54 @@ struct Line
 };
 //-------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------
-template <typename T>
 struct Segment
 {
-	struct Line<T> ls;
-	struct Point<T> ps1;
-	struct Point<T> ps2;
+	struct Line ls;
+	struct Point ps1;
+	struct Point ps2;
 	int invalid = 0 ;
 //-------------------------------------------------------------------------------------------	
-	Segment(struct Line<T> l, struct Point<T> p1, struct Point<T> p2) : ls(l), ps1(p1), ps2(p2){}
+	Segment(struct Line l, struct Point p1, struct Point p2) : ls(l), ps1(p1), ps2(p2){}
 	
-	Segment(struct Point<T> p1, struct Point<T> p2) : ls{p1, p2}, ps1(p1), ps2(p2) {if(!ps1.same(ps2)) {invalid = 1;}}
+	Segment(struct Point p1, struct Point p2) : ls{p1, p2}, ps1(p1), ps2(p2) {if(p1.same(p2)) {invalid = 1;}}
 //-------------------------------------------------------------------------------------------	
-	bool same(const struct Segment<T> ot) const
+	bool same(const struct Segment ot) const
 	{
 		if(!ot.ls.same(ls))
 			return false;
 			
-		if((ps1 == ot.ps1 || ps1 == ot.ps2) && (ps2 == ot.ps1 || ps2 == ot.ps2))
+		if((ps1.same(ot.ps1) || ps1.same(ot.ps2)) && (ps2.same(ot.ps1) || ps2.same(ot.ps2)))
 			return true;
 		return false;
 	}
 //-------------------------------------------------------------------------------------------	
-	bool onSegment(const struct Point<T> p) const
+	bool onSegment(const struct Point p) const
 	{
 		if(!ls.onLine(p))
 			return false;
 		
-		if(!((p.x >= ps1.x && p.x <= ps2.x) || (p.x <= ps1.x && p.x >= ps2.x)))
+		if(!(fabs(ps2.x - p.x) + fabs(p.x - ps1.x) <= fabs(ps2.x - ps1.x) + e))
 			return false;
 			
-		if(!((p.z >= ps1.z && p.z <= ps2.z) || (p.z <= ps1.z && p.z >= ps2.z)))
+		if(!(fabs(ps2.z - p.z) + fabs(p.z - ps1.z) <= fabs(ps2.z - ps1.z) + e))
 			return false;
 			
-		if(!((p.y >= ps1.y && p.y <= ps2.y) || (p.y <= ps1.y && p.y >= ps2.y)))
+		if(!(fabs(ps2.y - p.y) + fabs(p.y - ps1.y) <= fabs(ps2.y - ps1.y) + e))
 			return false;	
 			
 		return true;		
 	}
 //-------------------------------------------------------------------------------------------	
-	struct Point<T> cross(const struct Segment<T> ot) const //проверить работает ли оно
+	struct Point cross(const struct Segment ot) const 
 	{
-		struct Point<T> res;
+		struct Point res;
 		res = ls.cross(ot.ls);
 		
 		if(res.invalid == 0)
 			if(this->onSegment(res) && ot.onSegment(res))
 				return res;
 		
-		return invalid_point<T>;
+		return invalid_point;
 	}
 //-------------------------------------------------------------------------------------------
 	void print() const
@@ -329,15 +311,14 @@ struct Segment
 };
 //-------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------
-template <typename T>	
 struct Surface
 {
-	struct Vector<T> n;
-	struct Line<T> a1;
-	struct Line<T> a2;
-	T 		D;
+	struct Vector n;
+	struct Line a1;
+	struct Line a2;
+	double 		D;
 	
-	Surface(struct Line<T> b1, struct Line<T> b2) : a1(b1), a2(b2), n((b1.v.vectmul(b2.v)).norvec()) 
+	Surface(struct Line b1, struct Line b2) : a1(b1), a2(b2), n((b1.v.vectmul(b2.v)).norvec()) 
 	{
 		assert(!n.invalid() && "surface not exist");
 		D = -(n.ax * b1.lp.x + n.ay * b1.lp.y + n.az * b1.lp.z);
@@ -350,34 +331,38 @@ struct Surface
 		std::cout<<"D = "<<D<<'\n';
 	}
 	
-	bool parallel(const struct Surface<T> sur) const
+	bool parallel(const struct Surface sur) const
 	{
-		if((sur.n.ax == n.ax  && sur.n.az == n.az && sur.n.ay == n.ay) || (sur.n.ax == -n.ax  && sur.n.az == -n.az && sur.n.ay == -n.ay))
+		if(sur.n.same(n))
 			return true;
 		return false;
 	}
 	
-	bool same(const struct Surface<T> sur) const
+	bool same(const struct Surface sur) const
 	{
 		if(!this->parallel(sur))
 			return false;
 			
-		if(sur.n.ax == n.ax && D != sur.D)
-			return false;
-		
-		if(sur.n.ax == -n.ax && D != -sur.D)
+		if(fabs(D - sur.D) > e)
 			return false;
 			
 		return true;
 	}
 	
-	struct Point<T> crossLine(const struct Line<T> l) const 	//ПОЧИНИ
+	bool belongPoint(const struct Point p) const
 	{
-		T t0;
-		struct Point<T> res;
+		if(fabs(p.x * n.ax + p.y * n.ay + p.z * n.az + D) < e)
+			return true;
+		return false;
+	}
+	
+	struct Point crossLine(const struct Line l) const 	
+	{
+		double t0;
+		struct Point res;
 		
-		if(n.ax * l.v.ax + n.ay * l.v.ay + n.az * l.v.az == 0)
-			return invalid_point<T>;
+		if(fabs(n.ax * l.v.ax + n.ay * l.v.ay + n.az * l.v.az) < e)
+			return invalid_point;
 		
 		t0 = -(n.ax * l.lp.x + n.ay * l.lp.y + n.az * l.lp.z + D)/(n.ax * l.v.ax + n.ay * l.v.ay + n.az * l.v.az);
 		
@@ -388,9 +373,9 @@ struct Surface
 		return res;
 	}
 	
-	struct Point<T> crossSegment(const struct Segment<T> otr) const	//ПОЧИНИ
+	struct Point crossSegment(const struct Segment otr) const	
 	{
-		struct Point<T> res{0, 0, 0};
+		struct Point res{0, 0, 0};
 		
 		res = this->crossLine(otr.ls);
 		
@@ -400,23 +385,62 @@ struct Surface
 		if(otr.onSegment(res))
 			return res;
 			
-		return invalid_point<T>;
+		return invalid_point;
 	}
 };
 //-------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------
-template <typename T>	
+//-------------------------------------------------------------------------------------------	
 struct Triangle
 {
-	struct Point<T> pt1;
-	struct Point<T> pt2;
-	struct Point<T> pt3;
-	struct Segment<T> a;
-	struct Segment<T> b;
-	struct Segment<T> c;
+	struct Point pt1;
+	struct Point pt2;
+	struct Point pt3;
+	struct Segment a;
+	struct Segment b;
+	struct Segment c;
+	int invalid = 0; 		//invalid = 0 - valid, invalid = 1 - point, invalid = 2 - line;
+	int number = 0;
 //-------------------------------------------------------------------------------------------	
-	Triangle(struct Point<T> p1, struct Point<T> p2, struct Point<T> p3) : pt1(p1), pt2(p2), pt3(p3), a{p1, p2}, b{p2, p3}, c{p3, p1}{}
-	
+	Triangle(struct Point p1, struct Point p2, struct Point p3) : pt1(p1), pt2(p2), pt3(p3), a{p1, p2}, b{p2, p3}, c{p3, p1}
+	{
+		if(a.invalid && b.invalid)
+		{
+			invalid = 1;
+			return;
+		}	
+		
+		if(a.invalid || b.invalid || c.invalid)
+		{
+			invalid = 2;
+			return;
+		}
+		
+		if(a.ls.v.same(b.ls.v))
+		{
+			invalid = 2;
+			return;
+		}
+	}
+	Triangle(struct Point p1, struct Point p2, struct Point p3, int num) : pt1(p1), pt2(p2), pt3(p3), a{p1, p2}, b{p2, p3}, c{p3, p1}, number(num)
+	{
+		if(a.invalid && b.invalid)
+		{
+			invalid = 1;
+			return;
+		}	
+		
+		if(a.invalid || b.invalid || c.invalid)
+		{
+			invalid = 2;
+			return;
+		}
+		
+		if(a.ls.v.same(b.ls.v))
+		{
+			invalid = 2;
+			return;
+		}
+	}
 //-------------------------------------------------------------------------------------------	
 	bool no_exist() const
 	{
@@ -449,19 +473,22 @@ struct Triangle
 		}
 	}
 //-------------------------------------------------------------------------------------------
-	bool inTriangle(const struct Point<T> p) const
+	bool inTriangle(const struct Point p) const
 	{
-		struct Vector<T> v1{pt1, pt2};
-		struct Vector<T> v2{pt2, pt3};
-		struct Vector<T> v3{pt3, pt1};
+		if(p.invalid == 1)
+			return false;		
 		
-		struct Vector<T> a1{pt1, p};
-		struct Vector<T> a2{pt2, p};
-		struct Vector<T> a3{pt3, p};
+		struct Vector v1{pt1, pt2};
+		struct Vector v2{pt2, pt3};
+		struct Vector v3{pt3, pt1};
 		
-		struct Vector<T> res1 = a1.vectmul(v1);
-		struct Vector<T> res2 = a2.vectmul(v2);
-		struct Vector<T> res3 = a3.vectmul(v3);
+		struct Vector a1{pt1, p};
+		struct Vector a2{pt2, p};
+		struct Vector a3{pt3, p};
+		
+		struct Vector res1 = a1.vectmul(v1);
+		struct Vector res2 = a2.vectmul(v2);
+		struct Vector res3 = a3.vectmul(v3);
 		
 		if(res1.invalid() && res2.invalid())
 			return true;
@@ -470,7 +497,7 @@ struct Triangle
 		if(res1.invalid() && res3.invalid())
 			return true;
 		
-		if(!((res1.ax * res2.ax >= 0) && (res1.ax * res3.ax >= 0) && (res3.ax * res2.ax >= 0)))		//maybe error is here
+		if(!((res1.ax * res2.ax >= 0) && (res1.ax * res3.ax >= 0) && (res3.ax * res2.ax >= 0)))		
 			return false;
 			
 		if(!((res1.ay * res2.ay >= 0) && (res1.ay * res3.ay >= 0) && (res3.ay * res2.ay >= 0)))
@@ -482,68 +509,311 @@ struct Triangle
 		return true;
 	} 	
 //-------------------------------------------------------------------------------------------
-	bool crossTriangle(const struct Triangle<T> tr) const
+	bool crossTriangle(const struct Triangle tr) const
 	{
-		struct Surface<T> sur{a.ls, b.ls};
-		struct Surface<T> sur0{tr.a.ls, tr.b.ls};
-		
-		struct Point<T> p1{tr.pt1.x, tr.pt1.y, tr.pt1.z};
-		struct Point<T> p2{tr.pt2.x, tr.pt2.y, tr.pt2.z};
-		struct Point<T> p3{tr.pt3.x, tr.pt3.y, tr.pt3.z};		
+		if(invalid == 0 && tr.invalid == 0)
+		{ 
+			struct Surface sur{a.ls, b.ls};
+			struct Surface sur0{tr.a.ls, tr.b.ls};
+			
+			struct Point p1{tr.pt1.x, tr.pt1.y, tr.pt1.z};
+			struct Point p2{tr.pt2.x, tr.pt2.y, tr.pt2.z};
+			struct Point p3{tr.pt3.x, tr.pt3.y, tr.pt3.z};		
 
-		if(!sur.same(sur0))
-		{		
-		p1 = sur.crossSegment(tr.a);
-		p2 = sur.crossSegment(tr.b);
-		p3 = sur.crossSegment(tr.c);
+			if(!sur.same(sur0))
+			{		
+				p1 = sur.crossSegment(tr.a);
+				p2 = sur.crossSegment(tr.b);
+				p3 = sur.crossSegment(tr.c);
+			}
+			
+			if(p1.invalid && p2.invalid && p3.invalid)
+				return false;
+			
+			if(!(p1.invalid) && this->inTriangle(p1))
+				return true;
+				
+			if(!(p2.invalid) && this->inTriangle(p2))
+				return true;
+				
+			if(!(p3.invalid) && this->inTriangle(p3))
+				return true;
+				
+			if(sur.same(sur0))
+			{				
+				if(tr.inTriangle(pt1))
+					return true;
+				
+				if(tr.inTriangle(pt2))
+					return true;
+				
+				if(tr.inTriangle(pt3))
+					return true;	
+			}	
+				
+			if(!(p1.invalid) && !(p2.invalid) && !(p1.same(p2)))
+			{
+				struct Segment otr{p1, p2};
+				
+				if(!(otr.cross(a).invalid) || !(otr.cross(b).invalid) || !(otr.cross(c).invalid) )
+					return true;		
+			}
+			
+			if(!(p2.invalid) && !(p3.invalid) && !(p2.same(p3)))
+			{
+				struct Segment otr{p2, p3};
+				
+				if(!otr.cross(a).invalid || !otr.cross(b).invalid || !otr.cross(c).invalid )
+					return true;
+			}
+			
+			if(!(p1.invalid) && !(p3.invalid) && !(p1.same(p3)))
+			{
+				struct Segment otr{p1, p3};
+				
+				if(!otr.cross(a).invalid || !otr.cross(b).invalid || !otr.cross(c).invalid )
+					return true;
+			}
+			
+			return false;
 		}
 		
-		if(p1.invalid && p2.invalid && p3.invalid)
+		if(invalid == 1 && tr.invalid == 1)
+		{
+			if(pt1.same(tr.pt1))
+				return true;
 			return false;
+		}
 		
-		if(!(p1.invalid) && this->inTriangle(p1))
-			return true;
+		if(invalid == 0 && tr.invalid == 1)
+		{
+			struct Surface sur{a.ls, b.ls};
 			
-		if(!(p2.invalid) && this->inTriangle(p2))
-			return true;
+			if(!(sur.belongPoint(tr.pt1)))
+				return false;
 			
-		if(!(p3.invalid) && this->inTriangle(p3))
-			return true;
+			if(this->inTriangle(tr.pt1))
+				return true;
+				
+			return false;			
+		}
+		
+		if(invalid == 1 && tr.invalid == 0)
+		{
+			struct Surface sur{tr.a.ls, tr.b.ls};
 			
-		if(!(p1.invalid) && !(p2.invalid) && !(p3.invalid))
-		{				
+			if(!(sur.belongPoint(pt1)))
+				return false;
+			
 			if(tr.inTriangle(pt1))
 				return true;
-			
-			if(tr.inTriangle(pt2))
-				return true;
-			
-			if(tr.inTriangle(pt3))
-				return true;
-		}	
-			
-		if(!(p1.invalid) && !(p2.invalid) && !(p1.same(p2)))
-		{
-			struct Segment<T> otr{p1, p2};
-			
-			if(!(otr.cross(a).invalid) || !(otr.cross(b).invalid) || !(otr.cross(c).invalid) )
-				return true;		
+				
+			return false;	
 		}
 		
-		if(!(p2.invalid) && !(p3.invalid) && !(p2.same(p3)))
+		if(invalid == 2 && tr.invalid == 0)
 		{
-			struct Segment<T> otr{p2, p3};
+			struct Surface sur{tr.a.ls, tr.b.ls};
 			
-			if(!otr.cross(a).invalid || !otr.cross(b).invalid || !otr.cross(c).invalid )
-				return true;
+			struct Point res{};	
+			
+			if(c.invalid == 0)
+			{		
+				if(sur.belongPoint(c.ps1) && sur.belongPoint(c.ps2))
+				{				
+					if(!c.cross(tr.a).invalid || !c.cross(tr.b).invalid || !c.cross(tr.c).invalid )
+						return true;	
+						
+					if(tr.inTriangle(c.ps1) || tr.inTriangle(c.ps2))
+						return true;
+				}
+				
+				res = sur.crossSegment(c);				
+				if(res.invalid == 0 && tr.inTriangle(res))
+					return true;
+			}
+			
+			if(a.invalid == 0)
+			{		
+				if(sur.belongPoint(a.ps1) && sur.belongPoint(a.ps2))
+				{				
+					if(!a.cross(tr.a).invalid || !a.cross(tr.b).invalid || !a.cross(tr.c).invalid )
+						return true;
+						
+					if(tr.inTriangle(a.ps1) || tr.inTriangle(a.ps2))
+						return true;	
+				}
+			
+				res = sur.crossSegment(a);				
+				if(res.invalid == 0 && tr.inTriangle(res))
+					return true;
+			}
+			
+			if(b.invalid == 0)
+			{		
+				if(sur.belongPoint(b.ps1) && sur.belongPoint(b.ps2))
+				{				
+					if(!b.cross(tr.a).invalid || !b.cross(tr.b).invalid || !b.cross(tr.c).invalid )
+						return true;	
+						
+					if(tr.inTriangle(b.ps1) || tr.inTriangle(b.ps2))
+						return true;
+				}
+			
+				res = sur.crossSegment(b);				
+				if(res.invalid == 0 && tr.inTriangle(res))
+					return true;
+			}
+			
+			return false;
 		}
 		
-		if(!(p1.invalid) && !(p3.invalid) && !(p1.same(p3)))
+		if(invalid == 0 && tr.invalid == 2)
 		{
-			struct Segment<T> otr{p1, p3};
+			struct Surface sur{a.ls, b.ls};
 			
-			if(!otr.cross(a).invalid || !otr.cross(b).invalid || !otr.cross(c).invalid )
-				return true;
+			struct Point res{};	
+			
+			if(tr.c.invalid == 0)
+			{
+				if(sur.belongPoint(tr.c.ps1) && sur.belongPoint(tr.c.ps2))
+				{				
+					if(!tr.c.cross(a).invalid || !tr.c.cross(b).invalid || !tr.c.cross(c).invalid )
+						return true;	
+					
+					if(this->inTriangle(tr.c.ps1) || this->inTriangle(tr.c.ps2))
+						return true;
+				}
+			
+				res = sur.crossSegment(tr.c);				
+				if(res.invalid == 0 && this->inTriangle(res))
+					return true;
+			}
+			
+			if(tr.a.invalid == 0)
+			{		
+				if(sur.belongPoint(tr.a.ps1) && sur.belongPoint(tr.a.ps2))
+				{				
+					if(!tr.a.cross(a).invalid || !tr.a.cross(b).invalid || !tr.a.cross(c).invalid )
+						return true;
+						
+					if(this->inTriangle(tr.a.ps1) || this->inTriangle(tr.a.ps2))
+						return true;	
+				}
+			
+				res = sur.crossSegment(tr.a);				
+				if(res.invalid == 0 && this->inTriangle(res))
+					return true;
+			}
+			
+			if(tr.b.invalid == 0)
+			{	
+				if(sur.belongPoint(tr.b.ps1) && sur.belongPoint(tr.b.ps2))
+				{				
+					if(!tr.b.cross(a).invalid || !tr.b.cross(b).invalid || !tr.b.cross(c).invalid )
+						return true;	
+						
+					if(this->inTriangle(tr.b.ps1) || this->inTriangle(tr.b.ps2))
+						return true;
+				}
+				
+				res = sur.crossSegment(tr.b);				
+				if(res.invalid == 0 && this->inTriangle(res))
+					return true;
+			}
+			
+			return false;
+		}
+		
+		if(invalid == 2 && tr.invalid == 2)
+		{
+			struct Point res{};	
+		
+			if(a.invalid == 0)
+			{
+				if(tr.a.invalid == 0)
+				{
+					res = a.cross(tr.a);
+					if(res.invalid == 0)
+						return true;
+					return false;
+				}
+				
+				if(tr.b.invalid == 0)
+				{
+					res = a.cross(tr.b);
+					if(res.invalid == 0)
+						return true;
+					return false;
+				}
+				
+				return false;
+			}
+			
+			if(b.invalid == 0)
+			{
+				if(tr.a.invalid == 0)
+				{
+					res = b.cross(tr.a);
+					if(res.invalid == 0)
+						return true;
+					return false;
+				}
+				
+				if(tr.b.invalid == 0)
+				{
+					res = b.cross(tr.b);
+					if(res.invalid == 0)
+						return true;
+					return false;
+				}
+				
+				return false;
+			}
+			
+			return false;
+		}
+		
+		if(invalid == 1 && tr.invalid == 2)
+		{
+			if(tr.a.invalid == 0)
+			{
+				if(tr.a.onSegment(pt1))
+					return true;
+					
+				return false;
+			}
+			
+			if(tr.b.invalid == 0)
+			{
+				if(tr.b.onSegment(pt1))
+					return true;
+					
+				return false;
+			}
+			
+			return false;
+		}
+		
+		if(invalid == 2 && tr.invalid == 1)
+		{
+			if(a.invalid == 0)
+			{
+				if(a.onSegment(tr.pt1))
+					return true;
+					
+				return false;
+			}
+			
+			if(b.invalid == 0)
+			{
+				if(b.onSegment(tr.pt1))
+					return true;
+					
+				return false;
+			}
+			
+			return false;
 		}
 		
 		return false;
@@ -554,26 +824,26 @@ struct Triangle
 //-------------------------------------------------------------------------------------------
 void TestCrossLine()
 {
-	struct Point<float> p0{0, 0, 3};
-	struct Point<float> p1{1, 0, 4};
-	struct Line<float> line1{p0, p1};	//line 1 for surface
+	struct Point p0{0, 0, 3};
+	struct Point p1{1, 0, 4};
+	struct Line line1{p0, p1};	//line 1 for surface
 	
-	struct Point<float> p2{0, 0, 3};
-	struct Point<float> p3{0, 1, 1};
-	struct Line<float> line2{p2, p3};	//line 2 for surface
+	struct Point p2{0, 0, 3};
+	struct Point p3{0, 1, 1};
+	struct Line line2{p2, p3};	//line 2 for surface
 	
-	struct Surface<float> sur{line1, line2};
+	struct Surface sur{line1, line2};
 	
 	sur.print();
 	
 	((line1.v).vectmul(line2.v)).print();
 	((line1.v).vectmul(line2.v)).norvec().print();
 	
-	struct Point<float> p4{ -3, 0, -2};
-	struct Point<float> p5{-4, -3, -5};
-	struct Line<float> line3{p4, p5};	//line for cross
+	struct Point p4{ -3, 0, -2};
+	struct Point p5{-4, -3, -5};
+	struct Line line3{p4, p5};	//line for cross
 	
-	struct Point<float> res = sur.crossLine(line3);
+	struct Point res = sur.crossLine(line3);
 	
 	res.print();
 }
@@ -581,101 +851,101 @@ void TestCrossLine()
 //-------------------------------------------------------------------------------------------
 void TestCrossTriangle()
 {	
-	struct Point<float> p2{1, 1, 1};
-	struct Point<float> p1{1, 1, 1};
-	struct Point<float> p3{1, 1, 1};
+	struct Point p2{1, 1, 1};
+	struct Point p1{1, 1, 1};
+	struct Point p3{1, 1, 1};
 
 	p1.x = 0;	p1.y = 0;	p1.z = 0;
 	p2.x = 2;	p2.y = 2;	p2.z = 1;
 	p3.x = 0;	p3.y = 0;	p3.z = 2;
-	struct Triangle<float> T1{p1, p2, p3}; 	//основной
+	struct Triangle T1{p1, p2, p3}; 	//основной
 	p1.x = 0;	p1.y = 0;	p1.z = 2;
 	p2.x = 0;	p2.y = 0;	p2.z = 10;
 	p3.x = 5;	p3.y = 5;	p3.z = 5;
-	struct Triangle<float> T2{p1, p2, p3}; 	//пересекает в точке такой же
+	struct Triangle T2{p1, p2, p3}; 	//пересекает в точке такой же
 	p1.x = -2;	p1.y = -2;	p1.z = -1;
 	p2.x = 4;	p2.y = 4;	p2.z = 2;
 	p3.x = 0;	p3.y = 3;	p3.z = 0;
-	struct Triangle<float> T3{p1, p2, p3}; 	//пересекает по прямой но сторона бошльше
+	struct Triangle T3{p1, p2, p3}; 	//пересекает по прямой но сторона бошльше
 	p1.x = 10;	p1.y = 0;	p1.z = 0;
 	p2.x = 19;	p2.y = 0;	p2.z = 0;
 	p3.x = 18;	p3.y = 2;	p3.z = 2;
-	struct Triangle<float> T4{p1, p2, p3}; 	// не пересекает
+	struct Triangle T4{p1, p2, p3}; 	// не пересекает
 	p1.x = 1;	p1.y = 1;	p1.z = 1;
 	p2.x = 2;	p2.y = -1;	p2.z = 1;
 	p3.x = 10;	p3.y = 0;	p3.z = 1;
-	struct Triangle<float> T5{p1, p2, p3}; 	//точка внутри
+	struct Triangle T5{p1, p2, p3}; 	//точка внутри
 	p1.x = 0;	p1.y = 0;	p1.z = 1;
 	p2.x = 0;	p2.y = -10;	p2.z = 1;
 	p3.x = 4;	p3.y = -5;	p3.z = 1;
-	struct Triangle<float> T6{p1, p2, p3}; 	//точка на линии
+	struct Triangle T6{p1, p2, p3}; 	//точка на линии
 	p1.x = 1;	p1.y = 1;	p1.z = 1;
 	p2.x = 0.2;	p2.y = 0.2;	p2.z = 1.5;
 	p3.x = 0.2;	p3.y = 0.2;	p3.z = 0.5;
-	struct Triangle<float> T7{p1, p2, p3}; 	//в одной плоскости внутри
+	struct Triangle T7{p1, p2, p3}; 	//в одной плоскости внутри
 	p1.x = -0.5;	p1.y = -0.5;	p1.z = 2.5;
 	p2.x = -0.5;	p2.y = -0.5;	p2.z = -0.5;
 	p3.x = 3;	p3.y = 3;	p3.z = 1;
-	struct Triangle<float> T8{p1, p2, p3}; 	//в одной плоскости снаружи
+	struct Triangle T8{p1, p2, p3}; 	//в одной плоскости снаружи
 	p1.x = -0.5;	p1.y = -0.5;	p1.z = 2.5;
 	p2.x = -0.5;	p2.y = -0.5;	p2.z = -0.5;
 	p3.x = -6;	p3.y = -6;	p3.z = 1;
-	struct Triangle<float> T9{p1, p2, p3}; 	//в одной плоскости но не пересекает
+	struct Triangle T9{p1, p2, p3}; 	//в одной плоскости но не пересекает
 	p1.x = 0;	p1.y = 0;	p1.z = 2.46;
 	p2.x = 0.54;	p2.y = -0.6;	p2.z = 0;
 	p3.x = -1.35;	p3.y = 0;	p3.z = 0;
-	struct Triangle<float> T10{p1, p2, p3}; 	//рядышком не в одной плоскости и не пересекает
+	struct Triangle T10{p1, p2, p3}; 	//рядышком не в одной плоскости и не пересекает
 	
 	
-	if(T1.crossTriangle(T2))
-		std::cout<<"T1 cross T2"<<'\n';
+	if(T1.crossTriangle(T2) && T2.crossTriangle(T1))
+		std::cout<<"T1 & T2 cross"<<'\n';
 	else
-		std::cout<<"T1 not cross T2"<<'\n';
+		std::cout<<"T1 & T2 error"<<'\n';
 		
-	if(T1.crossTriangle(T3))
-		std::cout<<"T1 cross T3"<<'\n';
+	if(T1.crossTriangle(T3) && T3.crossTriangle(T1))
+		std::cout<<"T1 & T3 cross"<<'\n';
 	else
-		std::cout<<"T1 not cross T3"<<'\n';
+		std::cout<<"T1 & T3 error"<<'\n';
 		
-	if(T1.crossTriangle(T4))
-		std::cout<<"T1 cross T4"<<'\n';
+	if(!(T1.crossTriangle(T4) || T4.crossTriangle(T1)))
+		std::cout<<"T1 & T4 no cross"<<'\n';
 	else
-		std::cout<<"T1 not cross T4"<<'\n';
+		std::cout<<"T1 & T4 error"<<'\n';
 		
-	if(T1.crossTriangle(T5))
-		std::cout<<"T1 cross T5"<<'\n';
+	if(T1.crossTriangle(T5) && T5.crossTriangle(T1))
+		std::cout<<"T1 & T5 cross"<<'\n';
 	else
-		std::cout<<"T1 not cross T5"<<'\n';
+		std::cout<<"T1 & T5 error"<<'\n';
 		
-	if(T1.crossTriangle(T6))
-		std::cout<<"T1 cross T6"<<'\n';
+	if(T1.crossTriangle(T6) && T6.crossTriangle(T1))
+		std::cout<<"T1 & T6 cross"<<'\n';
 	else
-		std::cout<<"T1 not cross T6"<<'\n'; 		
+		std::cout<<"T1 & T6 error"<<'\n'; 		
 		
-	if(T1.crossTriangle(T7))
-		std::cout<<"T1 cross T7"<<'\n';
+	if(T1.crossTriangle(T7) && T7.crossTriangle(T1))
+		std::cout<<"T1 & T7 cross"<<'\n';
 	else
-		std::cout<<"T1 not cross T7"<<'\n'; 
+		std::cout<<"T1 & T7 error"<<'\n';
 		
-	if(T1.crossTriangle(T8))
-		std::cout<<"T1 cross T8"<<'\n';
+	if(T1.crossTriangle(T8) && T8.crossTriangle(T1))
+		std::cout<<"T1 & T8 cross"<<'\n';
 	else
-		std::cout<<"T1 not cross T8"<<'\n'; 
+		std::cout<<"T1 & T8 error"<<'\n'; 
 		
-	if(T1.crossTriangle(T9))
-		std::cout<<"T1 cross T9"<<'\n';
+	if(!(T1.crossTriangle(T9) || T9.crossTriangle(T1)))
+		std::cout<<"T1 & T9 no cross"<<'\n';
 	else
-		std::cout<<"T1 not cross T9"<<'\n'; 
+		std::cout<<"T1 & T9 error"<<'\n';
 		
 	if(T1.crossTriangle(T1))
-		std::cout<<"T1 cross T1"<<'\n';
+		std::cout<<"T1 & T1 cross"<<'\n';
 	else
-		std::cout<<"T1 not cross T1"<<'\n'; 
+		std::cout<<"T1 & T1 error"<<'\n';
 		
-	if(T1.crossTriangle(T10))
-		std::cout<<"T1 cross T10"<<'\n';
+	if(!(T1.crossTriangle(T10) || T10.crossTriangle(T1)))
+		std::cout<<"T1 & T10 no cross"<<'\n';
 	else
-		std::cout<<"T1 not cross T10"<<'\n'; 	
+		std::cout<<"T1 & T10 error"<<'\n'; 	
 }
 
 			
