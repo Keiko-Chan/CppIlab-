@@ -44,7 +44,7 @@ int main(void)
 				point[it->number] = 1;
 				point[jt->number] = 1;
 				
-				std::cout<<it->number + 1<<' '<<jt->number + 1<<std::endl;
+				std::cout<<it->number <<' '<< jt->number <<std::endl;
 			}
 		
 			jt++;
@@ -57,7 +57,7 @@ int main(void)
 	for(i = 0; i <= num; i++)
 	{
 		if(point[i] == 1)
-		std::cout << i + 1 << std::endl;
+		std::cout << i << std::endl;
 	}
 	
 	free(point);		
