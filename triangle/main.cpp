@@ -336,7 +336,7 @@ int main(void)
 	for(i = 0; i <= num; i++)
 	{
 		if(point[i] == 1)
-		std::cout << i + 1 << std::endl;
+		std::cout << i << std::endl;
 	}
 	
 	free(point);		
