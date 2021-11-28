@@ -14,8 +14,8 @@ struct Point
 	int invalid = 0;
 	
 	Point(double x1, double y1, double z1) : x(x1), y(y1), z(z1) {}
-	Point() : invalid(0){} 
-	Point(int a) : invalid(a){} 
+	Point() : invalid(0) {} 
+	Point(int a) : invalid(a) {} 
 	
 	void print() const
 	{
@@ -47,23 +47,13 @@ struct Vector
 	double ay = 0;
 	double az = 0;
 	
-	Vector(double x1, double y1, double z1)
-	{
-		ax = x1;
-		ay = y1;
-		az = z1;
-	}
+	Vector(double x1, double y1, double z1) : ax(x1), ay(y1), az(z1) {}
 	
-	Vector(struct Point p1, struct Point p2)
-	{
-		ax = p2.x - p1.x;
-		ay = p2.y - p1.y;
-		az = p2.z - p1.z;
-	}
+	Vector(struct Point p1, struct Point p2) : ax(p2.x - p1.x), ay(p2.y - p1.y), az(p2.z - p1.z) {}
 	
-	Vector(){}
+	Vector() {}
 	
-	double leng()
+	double leng() const
 	{
 		return sqrt(ay*ay + ax*ax + az*az);
 	}
@@ -72,8 +62,7 @@ struct Vector
 	{
 		struct Vector v{ax, ay, az};
 		
-		if(ax == 0 && ay == 0 && az == 0)
-			std::cout<<"Error invalid vector"<<'\n';
+		assert((ax != 0 || ay != 0 || az != 0) && "invalid vector leng");
 		
 		double lenge = v.leng();
 		
@@ -86,13 +75,13 @@ struct Vector
 	
 	bool same(const struct Vector vect) const	
 	{
-		if(vect.invalid() && this->invalid())
+		if(vect.invalid() && invalid())
 			return true;
 	
 		struct Vector v2;
 		struct Vector v1;		
 		v1 = vect.norvec();
-		v2 = this->norvec();
+		v2 = norvec();
 		
 		if(((fabs(v2.ax - v1.ax) < e) && (fabs(v2.ay - v1.ay) < e) && (fabs(v2.az - v1.az) < e)) || ((fabs(v2.ax + v1.ax) < e) && (fabs(v2.ay + v1.ay) < e) && (fabs(v2.az + v1.az) < e)))
 			return true;
@@ -132,14 +121,9 @@ struct Line
 	struct Vector v;
 	int invalid = 0;
 //-------------------------------------------------------------------------------------------	
-	Line(struct Point p1, struct Vector v1)
-	{
-		if((v1.invalid())) invalid = 1;
-		lp = p1;
-		v = v1;
-	}
+	Line(struct Point p1, struct Vector v1) : v(v1), lp(p1) { if((v1.invalid())) invalid = 1; }
 	
-	Line(struct Point p1, struct Point p2) : lp(p1), v{p1, p2} {if((p1.same(p2))) invalid = 1;}
+	Line(struct Point p1, struct Point p2) : lp(p1), v{p1, p2} { if((p1.same(p2))) invalid = 1; }
 //-------------------------------------------------------------------------------------------	
 	bool onLine(const struct Point p1) const
 	{
@@ -170,7 +154,7 @@ struct Line
 //-------------------------------------------------------------------------------------------	
 	struct Point cross(const struct Line line) const
 	{
-		if(this->same(line))
+		if(same(line))
 			return invalid_point;
 			
 		if(v.same(line.v))
@@ -258,7 +242,7 @@ struct Segment
 //-------------------------------------------------------------------------------------------	
 	Segment(struct Line l, struct Point p1, struct Point p2) : ls(l), ps1(p1), ps2(p2){}
 	
-	Segment(struct Point p1, struct Point p2) : ls{p1, p2}, ps1(p1), ps2(p2) {if(p1.same(p2)) {invalid = 1;}}
+	Segment(struct Point p1, struct Point p2) : ls{p1, p2}, ps1(p1), ps2(p2) { if(p1.same(p2)) { invalid = 1; } }
 //-------------------------------------------------------------------------------------------	
 	bool same(const struct Segment ot) const
 	{
@@ -293,7 +277,7 @@ struct Segment
 		res = ls.cross(ot.ls);
 		
 		if(res.invalid == 0)
-			if(this->onSegment(res) && ot.onSegment(res))
+			if(onSegment(res) && ot.onSegment(res))
 				return res;
 		
 		return invalid_point;
@@ -377,7 +361,7 @@ struct Surface
 	{
 		struct Point res{0, 0, 0};
 		
-		res = this->crossLine(otr.ls);
+		res = crossLine(otr.ls);
 		
 		if(res.invalid)
 			return res;
@@ -507,13 +491,11 @@ struct Triangle
 			return false;
 		
 		return true;
-	} 	
+	} 
 //-------------------------------------------------------------------------------------------
-	bool crossTriangle(const struct Triangle tr) const
+	bool Tr_Tr(const struct Triangle tr) const
 	{
-		if(invalid == 0 && tr.invalid == 0)
-		{ 
-			struct Surface sur{a.ls, b.ls};
+		struct Surface sur{a.ls, b.ls};
 			struct Surface sur0{tr.a.ls, tr.b.ls};
 			
 			struct Point p1{tr.pt1.x, tr.pt1.y, tr.pt1.z};
@@ -530,13 +512,13 @@ struct Triangle
 			if(p1.invalid && p2.invalid && p3.invalid)
 				return false;
 			
-			if(!(p1.invalid) && this->inTriangle(p1))
+			if(!(p1.invalid) && inTriangle(p1))
 				return true;
 				
-			if(!(p2.invalid) && this->inTriangle(p2))
+			if(!(p2.invalid) && inTriangle(p2))
 				return true;
 				
-			if(!(p3.invalid) && this->inTriangle(p3))
+			if(!(p3.invalid) && inTriangle(p3))
 				return true;
 				
 			if(sur.same(sur0))
@@ -576,245 +558,183 @@ struct Triangle
 			}
 			
 			return false;
+	}	
+//-------------------------------------------------------------------------------------------
+	bool Tr_Otr(const struct Triangle tr) const
+	{
+		struct Surface sur{a.ls, b.ls};
+			
+		struct Point res{};	
+			
+		if(tr.c.invalid == 0)
+		{
+			if(sur.belongPoint(tr.c.ps1) && sur.belongPoint(tr.c.ps2))
+			{				
+				if(!tr.c.cross(a).invalid || !tr.c.cross(b).invalid || !tr.c.cross(c).invalid )
+					return true;	
+				
+				if(this->inTriangle(tr.c.ps1) || inTriangle(tr.c.ps2))
+					return true;
+			}
+		
+			res = sur.crossSegment(tr.c);				
+			if(res.invalid == 0 && inTriangle(res))
+				return true;
 		}
+		
+		if(tr.a.invalid == 0)
+		{		
+			if(sur.belongPoint(tr.a.ps1) && sur.belongPoint(tr.a.ps2))
+			{				
+				if(!tr.a.cross(a).invalid || !tr.a.cross(b).invalid || !tr.a.cross(c).invalid )
+					return true;
+					
+				if(this->inTriangle(tr.a.ps1) || inTriangle(tr.a.ps2))
+					return true;	
+			}
+		
+			res = sur.crossSegment(tr.a);				
+			if(res.invalid == 0 && inTriangle(res))
+				return true;
+		}
+		
+		if(tr.b.invalid == 0)
+		{	
+			if(sur.belongPoint(tr.b.ps1) && sur.belongPoint(tr.b.ps2))
+			{				
+				if(!tr.b.cross(a).invalid || !tr.b.cross(b).invalid || !tr.b.cross(c).invalid )
+					return true;	
+					
+				if(this->inTriangle(tr.b.ps1) || inTriangle(tr.b.ps2))
+					return true;
+			}
+			
+			res = sur.crossSegment(tr.b);				
+			if(res.invalid == 0 && inTriangle(res))
+				return true;
+		}
+		
+		return false;
+	}
+//-------------------------------------------------------------------------------------------
+	bool Tr_P(const struct Triangle tr) const
+	{
+		struct Surface sur{a.ls, b.ls};
+			
+		if(!(sur.belongPoint(tr.pt1)))
+			return false;
+			
+		if(this->inTriangle(tr.pt1))
+			return true;
+				
+		return false;
+	}
+//-------------------------------------------------------------------------------------------
+	bool P_Otr(const struct Triangle tr) const
+	{
+		if(tr.a.invalid == 0)
+		{
+			if(tr.a.onSegment(pt1))
+				return true;
+				
+			return false;
+		}
+		
+		if(tr.b.invalid == 0)
+		{
+			if(tr.b.onSegment(pt1))
+				return true;
+				
+			return false;
+		}
+		
+		return false;
+	}
+//-------------------------------------------------------------------------------------------
+	bool Otr_Otr(const struct Triangle tr) const
+	{
+		struct Point res{};	
+		
+		if(a.invalid == 0)
+		{
+			if(tr.a.invalid == 0)
+			{
+				res = a.cross(tr.a);
+				if(res.invalid == 0)
+					return true;
+				return false;
+			}
+			
+			if(tr.b.invalid == 0)
+			{
+				res = a.cross(tr.b);
+				if(res.invalid == 0)
+					return true;
+				return false;
+			}
+			
+			return false;
+		}
+		
+		if(b.invalid == 0)
+		{
+			if(tr.a.invalid == 0)
+			{
+				res = b.cross(tr.a);
+				if(res.invalid == 0)
+					return true;
+				return false;
+			}
+			
+			if(tr.b.invalid == 0)
+			{
+				res = b.cross(tr.b);
+				if(res.invalid == 0)
+					return true;
+				return false;
+			}
+			
+			return false;
+		}
+		
+		return false;
+	}
+//-------------------------------------------------------------------------------------------
+	bool P_P(const struct Triangle tr) const
+	{
+		if(pt1.same(tr.pt1))
+			return true;
+		return false;
+	}
+//-------------------------------------------------------------------------------------------
+	bool crossTriangle(const struct Triangle tr) const
+	{		
+		if(invalid == 0 && tr.invalid == 0)
+			return Tr_Tr(tr);
 		
 		if(invalid == 1 && tr.invalid == 1)
-		{
-			if(pt1.same(tr.pt1))
-				return true;
-			return false;
-		}
+			return P_P(tr);		
 		
 		if(invalid == 0 && tr.invalid == 1)
-		{
-			struct Surface sur{a.ls, b.ls};
-			
-			if(!(sur.belongPoint(tr.pt1)))
-				return false;
-			
-			if(this->inTriangle(tr.pt1))
-				return true;
-				
-			return false;			
-		}
+			return Tr_P(tr);
 		
 		if(invalid == 1 && tr.invalid == 0)
-		{
-			struct Surface sur{tr.a.ls, tr.b.ls};
-			
-			if(!(sur.belongPoint(pt1)))
-				return false;
-			
-			if(tr.inTriangle(pt1))
-				return true;
-				
-			return false;	
-		}
+			return tr.Tr_P(*this);
 		
 		if(invalid == 2 && tr.invalid == 0)
-		{
-			struct Surface sur{tr.a.ls, tr.b.ls};
-			
-			struct Point res{};	
-			
-			if(c.invalid == 0)
-			{		
-				if(sur.belongPoint(c.ps1) && sur.belongPoint(c.ps2))
-				{				
-					if(!c.cross(tr.a).invalid || !c.cross(tr.b).invalid || !c.cross(tr.c).invalid )
-						return true;	
-						
-					if(tr.inTriangle(c.ps1) || tr.inTriangle(c.ps2))
-						return true;
-				}
-				
-				res = sur.crossSegment(c);				
-				if(res.invalid == 0 && tr.inTriangle(res))
-					return true;
-			}
-			
-			if(a.invalid == 0)
-			{		
-				if(sur.belongPoint(a.ps1) && sur.belongPoint(a.ps2))
-				{				
-					if(!a.cross(tr.a).invalid || !a.cross(tr.b).invalid || !a.cross(tr.c).invalid )
-						return true;
-						
-					if(tr.inTriangle(a.ps1) || tr.inTriangle(a.ps2))
-						return true;	
-				}
-			
-				res = sur.crossSegment(a);				
-				if(res.invalid == 0 && tr.inTriangle(res))
-					return true;
-			}
-			
-			if(b.invalid == 0)
-			{		
-				if(sur.belongPoint(b.ps1) && sur.belongPoint(b.ps2))
-				{				
-					if(!b.cross(tr.a).invalid || !b.cross(tr.b).invalid || !b.cross(tr.c).invalid )
-						return true;	
-						
-					if(tr.inTriangle(b.ps1) || tr.inTriangle(b.ps2))
-						return true;
-				}
-			
-				res = sur.crossSegment(b);				
-				if(res.invalid == 0 && tr.inTriangle(res))
-					return true;
-			}
-			
-			return false;
-		}
+			return tr.Tr_Otr(*this);
 		
 		if(invalid == 0 && tr.invalid == 2)
-		{
-			struct Surface sur{a.ls, b.ls};
-			
-			struct Point res{};	
-			
-			if(tr.c.invalid == 0)
-			{
-				if(sur.belongPoint(tr.c.ps1) && sur.belongPoint(tr.c.ps2))
-				{				
-					if(!tr.c.cross(a).invalid || !tr.c.cross(b).invalid || !tr.c.cross(c).invalid )
-						return true;	
-					
-					if(this->inTriangle(tr.c.ps1) || this->inTriangle(tr.c.ps2))
-						return true;
-				}
-			
-				res = sur.crossSegment(tr.c);				
-				if(res.invalid == 0 && this->inTriangle(res))
-					return true;
-			}
-			
-			if(tr.a.invalid == 0)
-			{		
-				if(sur.belongPoint(tr.a.ps1) && sur.belongPoint(tr.a.ps2))
-				{				
-					if(!tr.a.cross(a).invalid || !tr.a.cross(b).invalid || !tr.a.cross(c).invalid )
-						return true;
-						
-					if(this->inTriangle(tr.a.ps1) || this->inTriangle(tr.a.ps2))
-						return true;	
-				}
-			
-				res = sur.crossSegment(tr.a);				
-				if(res.invalid == 0 && this->inTriangle(res))
-					return true;
-			}
-			
-			if(tr.b.invalid == 0)
-			{	
-				if(sur.belongPoint(tr.b.ps1) && sur.belongPoint(tr.b.ps2))
-				{				
-					if(!tr.b.cross(a).invalid || !tr.b.cross(b).invalid || !tr.b.cross(c).invalid )
-						return true;	
-						
-					if(this->inTriangle(tr.b.ps1) || this->inTriangle(tr.b.ps2))
-						return true;
-				}
-				
-				res = sur.crossSegment(tr.b);				
-				if(res.invalid == 0 && this->inTriangle(res))
-					return true;
-			}
-			
-			return false;
-		}
+			return Tr_Otr(tr);
 		
 		if(invalid == 2 && tr.invalid == 2)
-		{
-			struct Point res{};	
-		
-			if(a.invalid == 0)
-			{
-				if(tr.a.invalid == 0)
-				{
-					res = a.cross(tr.a);
-					if(res.invalid == 0)
-						return true;
-					return false;
-				}
-				
-				if(tr.b.invalid == 0)
-				{
-					res = a.cross(tr.b);
-					if(res.invalid == 0)
-						return true;
-					return false;
-				}
-				
-				return false;
-			}
+			return Otr_Otr(tr);
 			
-			if(b.invalid == 0)
-			{
-				if(tr.a.invalid == 0)
-				{
-					res = b.cross(tr.a);
-					if(res.invalid == 0)
-						return true;
-					return false;
-				}
-				
-				if(tr.b.invalid == 0)
-				{
-					res = b.cross(tr.b);
-					if(res.invalid == 0)
-						return true;
-					return false;
-				}
-				
-				return false;
-			}
-			
-			return false;
-		}
-		
 		if(invalid == 1 && tr.invalid == 2)
-		{
-			if(tr.a.invalid == 0)
-			{
-				if(tr.a.onSegment(pt1))
-					return true;
-					
-				return false;
-			}
-			
-			if(tr.b.invalid == 0)
-			{
-				if(tr.b.onSegment(pt1))
-					return true;
-					
-				return false;
-			}
-			
-			return false;
-		}
+			return P_Otr(tr);
 		
 		if(invalid == 2 && tr.invalid == 1)
-		{
-			if(a.invalid == 0)
-			{
-				if(a.onSegment(tr.pt1))
-					return true;
-					
-				return false;
-			}
-			
-			if(b.invalid == 0)
-			{
-				if(b.onSegment(tr.pt1))
-					return true;
-					
-				return false;
-			}
-			
-			return false;
-		}
+			return tr.P_Otr(*this);
 		
 		return false;
 	}
